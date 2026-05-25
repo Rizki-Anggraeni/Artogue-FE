@@ -4,11 +4,12 @@ import './artogue-shared.css'
 import { Dashboard } from './pages/Dashboard'
 import { TambahAset } from './pages/TambahAset'
 import { KelolaAset } from './pages/KelolaAset'
+import { Landing } from './pages/Landing'
 
 function App() {
   return (
     <Router>
-    <div className="bg-background dark:bg-dark-bg text-on-surface dark:text-white relative overflow-x-clip min-h-screen transition-colors duration-300">
+    <div className="bg-background dark:bg-dark-bg text-on-surface dark:text-white relative z-0 overflow-x-clip min-h-screen transition-colors duration-300">
       
       {/* Background dekoratif bawaan artogue-shared.css */}
       <div className="artogue-bg" aria-hidden="true">
@@ -32,7 +33,8 @@ function App() {
       </div>
 
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<Landing />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/tambah-aset" element={<TambahAset />} />
         <Route path="/kelola-aset" element={<KelolaAset />} />
       </Routes>

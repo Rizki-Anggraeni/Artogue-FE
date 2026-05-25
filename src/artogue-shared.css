@@ -81,7 +81,7 @@ main .font-label-sm.text-on-surface-variant {
 .artogue-bg {
     position: fixed;
     inset: 0;
-    z-index: 0;
+    z-index: -1;
     pointer-events: none;
     overflow: hidden;
 }

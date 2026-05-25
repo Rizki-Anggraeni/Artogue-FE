@@ -62,6 +62,15 @@ export default {
         "dark-card": "#1c1b1b",
         "dark-primary": "#7c3aed"
       },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-16px)' },
+        }
+      },
+      animation: {
+        float: 'float 6s ease-in-out infinite',
+      },
       borderRadius: {
         "DEFAULT": "0.25rem",
         "lg": "0.5rem",

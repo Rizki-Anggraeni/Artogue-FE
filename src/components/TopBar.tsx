@@ -40,7 +40,7 @@ export function TopBar() {
         isScrolled ? 'px-6 md:px-8 py-2.5' : 'px-6 md:px-12 lg:px-16 py-4'
       }`}>
         <div>
-          <Link to="/" className="font-label-md text-label-md text-primary dark:text-primary-fixed-dim font-bold tracking-wide hover:opacity-80 no-underline">Artogue</Link>
+          <Link to="/dashboard" className="font-label-md text-label-md text-primary dark:text-primary-fixed-dim font-bold tracking-wide hover:opacity-80 no-underline">Artogue</Link>
           <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-on-surface-variant mt-0.5">
             Halo, <span className="font-semibold text-on-surface dark:text-white">Pengguna</span>
           </p>
