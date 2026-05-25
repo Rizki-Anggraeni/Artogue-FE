@@ -347,3 +347,87 @@ main .font-label-sm.text-on-surface-variant {
 .delay-2 { animation-delay: 0.14s; }
 .delay-3 { animation-delay: 0.21s; }
 .delay-4 { animation-delay: 0.28s; }
+
+/* ——— Custom Card Tambah Aset ——— */
+.bank-card {
+    background: linear-gradient(135deg, #005596 0%, #0077c8 45%, #003d6b 100%);
+    box-shadow: 0 12px 28px -6px rgba(0, 85, 150, 0.45);
+}
+
+.bank-card::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    right: -20%;
+    width: 70%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 65%);
+    pointer-events: none;
+}
+
+.form-card {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+.glass-blur {
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+.input-field:focus {
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+.btn-primary-glow:hover {
+    box-shadow: 0 6px 24px rgba(124, 58, 237, 0.4);
+}
+
+.chip-emv {
+    background: linear-gradient(145deg, #d4af37 0%, #f5e6a3 40%, #c9a227 100%);
+}
+
+.wallet-card-bibit {
+    background: linear-gradient(135deg, #0d9f4f 0%, #11c15e 50%, #087a3d 100%);
+    box-shadow: 0 12px 28px -6px rgba(17, 193, 94, 0.4);
+}
+
+.wallet-card-pluang {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #1e3a8a 100%);
+    box-shadow: 0 12px 28px -6px rgba(59, 130, 246, 0.4);
+}
+
+.wallet-card-ajaib {
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #5b21b6 100%);
+    box-shadow: 0 12px 28px -6px rgba(124, 58, 237, 0.4);
+}
+
+.wallet-card-ewallet {
+    background: linear-gradient(135deg, #00aed6 0%, #00c2cb 50%, #0088a8 100%);
+    box-shadow: 0 12px 28px -6px rgba(0, 174, 214, 0.35);
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up { animation: fadeUp 0.45s ease-out forwards; }
+.animate-fade-up-delay { animation: fadeUp 0.5s ease-out 0.1s forwards; opacity: 0; }
+
+/* ——— Styling Kartu Asset (Chip) & Scrollbar ——— */
+.asset-chip {
+    background-color: #eef4ff;
+    min-width: 160px;
+}
+
+.dark .asset-chip {
+    background-color: rgba(99, 14, 212, 0.12);
+}
+
+.asset-scroll::-webkit-scrollbar { height: 6px; }
+
+.asset-scroll::-webkit-scrollbar-thumb {
+    background: rgba(99, 14, 212, 0.25);
+    border-radius: 999px;
+}

@@ -8,7 +8,7 @@ import { KelolaAset } from './pages/KelolaAset'
 function App() {
   return (
     <Router>
-    <div className="bg-background dark:bg-dark-bg text-on-surface dark:text-white relative overflow-x-hidden min-h-screen transition-colors duration-300">
+    <div className="bg-background dark:bg-dark-bg text-on-surface dark:text-white relative overflow-x-clip min-h-screen transition-colors duration-300">
       
       {/* Background dekoratif bawaan artogue-shared.css */}
       <div className="artogue-bg" aria-hidden="true">
