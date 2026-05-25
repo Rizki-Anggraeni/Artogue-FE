@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export function TopBar() {
   const [isDark, setIsDark] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const navigate = useNavigate();
 
   // Cek tema saat komponen pertama kali dirender
   useEffect(() => {
@@ -26,6 +27,12 @@ export function TopBar() {
       html.classList.add('dark');
       setIsDark(true);
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('artogue_token');
+    localStorage.removeItem('artogue_user_name');
+    navigate('/');
   };
 
   return (
@@ -70,7 +77,9 @@ export function TopBar() {
               <span className="material-symbols-outlined text-[22px]">help</span>
             </button>
             <div className="h-6 w-[1px] bg-outline-variant dark:bg-white/10 mx-1 md:mx-2"></div>
-            <button className="text-on-surface-variant dark:text-on-surface-variant hover:text-error dark:hover:text-red-400 font-label-md text-label-md transition-all ml-1 px-3 py-2 rounded-lg hover:bg-error-container/50 dark:hover:bg-red-500/10">Logout</button>
+            <button onClick={handleLogout} className="text-on-surface-variant dark:text-on-surface-variant hover:text-error dark:hover:text-red-400 font-label-md text-label-md transition-all ml-1 px-3 py-2 rounded-lg hover:bg-error-container/50 dark:hover:bg-red-500/10">
+              Logout
+            </button>
           </div>
         </div>
       </div>

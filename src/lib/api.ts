@@ -1,21 +1,43 @@
-import axios from "axios";
+import axios from 'axios';
 
-// Membuat instance axios dengan konfigurasi dasar
+// Instance Axios yang terhubung ke Backend Artogue di Vercel
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
+  baseURL: 'https://artogue-backend.vercel.app',
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
 });
 
-// Interceptor untuk menyisipkan token JWT secara otomatis sebelum request dikirim
+// Interceptor untuk Request: Menyematkan Bearer Token sebelum request dikirim
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token"); // Ambil token dari localStorage
+    // Ambil token dari localStorage yang disimpan saat login
+    const token = localStorage.getItem('artogue_token');
+    
+    // Jika token ada, tambahkan ke header Authorization
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
+
+// Interceptor untuk Response: Menangani error secara global (misal: 401 Unauthorized)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Token kedaluwarsa atau tidak valid, hapus sesi dan lempar ke Landing Page
+      localStorage.removeItem('artogue_token');
+      localStorage.removeItem('artogue_user_name');
+      window.location.href = '/';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;

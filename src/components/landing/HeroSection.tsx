@@ -1,3 +1,7 @@
+import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { api } from '../../lib/api';
+
 /* Donut SVG chart */
 const DonutChart = () => {
   const segments = [
@@ -156,8 +160,49 @@ const PhoneMockup = () => (
   </div>
 )
 
-const HeroSection = () => (
-  <section className="hero pt-28 pb-16" id="hero">
+const HeroSection = () => {
+  const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem('artogue_token');
+
+  useEffect(() => {
+    const renderGoogleBtn = () => {
+      if (!isLoggedIn && (window as any).google) {
+        const client = (window as any).google.accounts.id;
+        client.initialize({
+          client_id: '876130856435-311pf6cq1jjvpuduvqktg3irc6r934ck.apps.googleusercontent.com',
+          callback: async (response: any) => {
+            if (response.credential) {
+              try {
+                const res = await api.post('/auth/google', { token: response.credential });
+                localStorage.setItem('artogue_token', res.data.token);
+                localStorage.setItem('artogue_user_name', res.data.user.name);
+                navigate('/dashboard');
+              } catch (error) {
+                console.error('Proses otentikasi ke backend gagal', error);
+              }
+            }
+          },
+        });
+        const btn = document.getElementById('google-login-hero');
+        if (btn) client.renderButton(btn, { theme: 'outline', size: 'large', shape: 'pill' });
+      }
+    };
+
+    if ((window as any).google) {
+      renderGoogleBtn();
+    } else {
+      const timer = setInterval(() => {
+        if ((window as any).google) {
+          clearInterval(timer);
+          renderGoogleBtn();
+        }
+      }, 200);
+      return () => clearInterval(timer);
+    }
+  }, [isLoggedIn, navigate]);
+
+  return (
+    <section className="hero pt-28 pb-16" id="hero">
     <div className="container mx-auto px-6">
       <div className="hero-grid grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
         {/* LEFT */}
@@ -173,9 +218,15 @@ const HeroSection = () => (
           <p className="hero-p text-lg opacity-80 mb-8 max-w-lg">
             Pantau, kelola, dan kembangkan seluruh asetmu mulai dari bank, saham, kripto, obligasi, hingga lending dengan mudah dan aman.
           </p>
-          <div className="hero-btns flex gap-4">
-            <button className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:brightness-110">Mulai Gratis Sekarang →</button>
-            <button className="border border-white/20 bg-white/5 px-6 py-3 rounded-xl font-bold hover:bg-white/10">▶ Lihat Demo</button>
+          <div className="hero-btns flex flex-wrap items-center gap-4 h-auto md:h-12">
+            {isLoggedIn ? (
+              <Link to="/dashboard" className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:brightness-110 flex items-center h-full">
+                Masuk Dashboard →
+              </Link>
+            ) : (
+              <div id="google-login-hero" className="flex items-center h-full"></div>
+            )}
+            <button className="border border-white/20 bg-white/5 px-6 py-3 rounded-xl font-bold hover:bg-white/10 flex items-center h-full">▶ Lihat Demo</button>
           </div>
 
           <div className="hero-trust mt-10 flex flex-wrap gap-6">
@@ -216,6 +267,7 @@ const HeroSection = () => (
       </div>
     </div>
   </section>
-)
+  );
+};
 
 export default HeroSection

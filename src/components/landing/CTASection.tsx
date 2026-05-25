@@ -1,5 +1,50 @@
-const CTASection = () => (
-  <section className="cta" id="cta">
+import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { api } from '../../lib/api';
+
+const CTASection = () => {
+  const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem('artogue_token');
+
+  useEffect(() => {
+    const renderGoogleBtn = () => {
+      if (!isLoggedIn && (window as any).google) {
+        const client = (window as any).google.accounts.id;
+        client.initialize({
+          client_id: '876130856435-311pf6cq1jjvpuduvqktg3irc6r934ck.apps.googleusercontent.com',
+          callback: async (response: any) => {
+            if (response.credential) {
+              try {
+                const res = await api.post('/auth/google', { token: response.credential });
+                localStorage.setItem('artogue_token', res.data.token);
+                localStorage.setItem('artogue_user_name', res.data.user.name);
+                navigate('/dashboard');
+              } catch (error) {
+                console.error('Proses otentikasi ke backend gagal', error);
+              }
+            }
+          },
+        });
+        const btn = document.getElementById('google-login-cta');
+        if (btn) client.renderButton(btn, { theme: 'outline', size: 'large', shape: 'pill' });
+      }
+    };
+
+    if ((window as any).google) {
+      renderGoogleBtn();
+    } else {
+      const timer = setInterval(() => {
+        if ((window as any).google) {
+          clearInterval(timer);
+          renderGoogleBtn();
+        }
+      }, 200);
+      return () => clearInterval(timer);
+    }
+  }, [isLoggedIn, navigate]);
+
+  return (
+    <section className="cta" id="cta">
     <div className="container mx-auto px-6 py-16">
       <div className="cta-inner text-center animate-in delay-1">
         <div className="cta-left mb-6">
@@ -10,12 +55,19 @@ const CTASection = () => (
             Bergabunglah sekarang dan rasakan kemudahan mengelola keuangan dalam satu aplikasi.
           </p>
         </div>
-        <button className="btn-cta bg-primary text-white px-8 py-3 rounded-full font-bold hover:opacity-90" id="btn-cta-main">
-          Mulai Gratis Sekarang →
-        </button>
+        <div className="flex justify-center mt-6">
+          {isLoggedIn ? (
+            <Link to="/dashboard" className="btn-cta bg-primary text-white px-8 py-3 rounded-full font-bold hover:opacity-90 flex items-center">
+              Masuk Dashboard →
+            </Link>
+          ) : (
+            <div id="google-login-cta" className="flex items-center"></div>
+          )}
+        </div>
       </div>
     </div>
   </section>
-)
+  );
+};
 
 export default CTASection

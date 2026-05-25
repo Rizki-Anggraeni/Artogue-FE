@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Logo from './Logo';
+import { api } from '../../lib/api';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem('artogue_token');
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains('dark'));
@@ -13,6 +16,45 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Render tombol Google Sign-In yang andal jika pengguna belum login
+  useEffect(() => {
+    const renderGoogleBtn = () => {
+      if (!isLoggedIn && (window as any).google) {
+        const client = (window as any).google.accounts.id;
+        client.initialize({
+          client_id: '876130856435-311pf6cq1jjvpuduvqktg3irc6r934ck.apps.googleusercontent.com',
+          callback: async (response: any) => {
+            if (response.credential) {
+              try {
+                const res = await api.post('/auth/google', { token: response.credential });
+                localStorage.setItem('artogue_token', res.data.token);
+                localStorage.setItem('artogue_user_name', res.data.user.name);
+                navigate('/dashboard');
+              } catch (error) {
+                console.error('Proses otentikasi ke backend gagal', error);
+              }
+            }
+          },
+        });
+        const btn = document.getElementById('google-login-nav');
+        if (btn) client.renderButton(btn, { theme: isDark ? 'filled_black' : 'outline', size: 'large', shape: 'pill' });
+      }
+    };
+
+    if ((window as any).google) {
+      renderGoogleBtn();
+    } else {
+      // Tunggu hingga script Google dimuat
+      const timer = setInterval(() => {
+        if ((window as any).google) {
+          clearInterval(timer);
+          renderGoogleBtn();
+        }
+      }, 200);
+      return () => clearInterval(timer);
+    }
+  }, [isLoggedIn, isDark, navigate]);
 
   const toggleTheme = () => {
     const html = document.documentElement;
@@ -55,7 +97,14 @@ const Navbar = () => {
           >
             <span className="material-symbols-outlined text-[22px]">{isDark ? 'light_mode' : 'dark_mode'}</span>
           </button>
-          <Link to="/dashboard" className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold hover:brightness-110 text-sm">Masuk Dashboard</Link>
+          
+          {isLoggedIn ? (
+            <Link to="/dashboard" className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold hover:brightness-110 text-sm">
+              Masuk Dashboard
+            </Link>
+          ) : (
+            <div id="google-login-nav"></div>
+          )}
         </div>
       </div>
     </header>

@@ -2,8 +2,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import './App.css'
 import './artogue-shared.css'
 import { Dashboard } from './pages/Dashboard'
-import { TambahAset } from './pages/TambahAset'
-import { KelolaAset } from './pages/KelolaAset'
 import { Landing } from './pages/Landing'
 
 function App() {
@@ -35,8 +33,6 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/tambah-aset" element={<TambahAset />} />
-        <Route path="/kelola-aset" element={<KelolaAset />} />
       </Routes>
   </div>
   </Router>
