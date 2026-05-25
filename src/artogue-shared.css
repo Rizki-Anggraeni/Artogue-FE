@@ -1,0 +1,349 @@
+/* Artogue — teks terbaca (light/dark) + background dekoratif + pemilih periode */
+
+html.dark { color-scheme: dark; }
+html.light { color-scheme: light; }
+
+/* Kontras teks global di dalam konten utama */
+.light main,
+.light .page-content {
+    --artogue-text: #141b2b;
+    --artogue-text-muted: #4a4455;
+    --artogue-text-subtle: #7b7487;
+}
+
+.dark main,
+.dark .page-content {
+    --artogue-text: #f2f4fc;
+    --artogue-text-muted: #c8cedd;
+    --artogue-text-subtle: #9aa3b8;
+}
+
+main,
+.page-content {
+    color: var(--artogue-text, #141b2b);
+}
+
+main .text-on-surface,
+.page-content .text-on-surface,
+main .font-headline-md,
+main .font-headline-lg,
+main h2, main h3, main h4, main h5 {
+    color: var(--artogue-text);
+}
+
+.dark main .text-on-surface:not(.text-on-primary):not(.text-white),
+.dark .page-content .text-on-surface:not(.text-on-primary) {
+    color: var(--artogue-text);
+}
+
+main .text-on-surface-variant,
+.page-content .text-on-surface-variant,
+main .font-body-sm.text-on-surface-variant,
+main .font-label-sm.text-on-surface-variant {
+    color: var(--artogue-text-muted) !important;
+}
+
+.dark header .text-on-surface-variant {
+    color: var(--artogue-text-muted) !important;
+}
+
+.dark .asset-chip .font-body-sm,
+.dark .asset-chip .text-on-surface-variant {
+    color: var(--artogue-text-muted) !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: var(--artogue-text-subtle);
+    opacity: 1;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+    color: var(--artogue-text);
+}
+
+.dark .chart-card h4,
+.dark .account-card h5,
+.dark .account-card p {
+    color: inherit;
+}
+
+/* Kartu gradient ungu — tetap teks putih */
+.text-on-primary,
+.bg-gradient-to-br.from-primary *,
+[class*="from-primary"] .text-on-primary {
+    color: #ffffff !important;
+}
+
+/* ——— Background dekoratif ——— */
+.artogue-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.artogue-bg__grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(99, 14, 212, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 14, 212, 0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 20%, transparent 75%);
+}
+
+.dark .artogue-bg__grid {
+    background-image:
+        linear-gradient(rgba(124, 58, 237, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124, 58, 237, 0.06) 1px, transparent 1px);
+}
+
+.artogue-bg__blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.45;
+    animation: blobDrift 18s ease-in-out infinite;
+}
+
+.artogue-bg__blob--1 {
+    width: 420px;
+    height: 420px;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.35) 0%, transparent 70%);
+    top: -8%;
+    right: -5%;
+    animation-delay: 0s;
+}
+
+.artogue-bg__blob--2 {
+    width: 360px;
+    height: 360px;
+    background: radial-gradient(circle, rgba(99, 14, 212, 0.28) 0%, transparent 70%);
+    bottom: 10%;
+    left: -8%;
+    animation-delay: -6s;
+}
+
+.artogue-bg__blob--3 {
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+    top: 45%;
+    left: 40%;
+    animation-delay: -12s;
+}
+
+.dark .artogue-bg__blob { opacity: 0.55; }
+
+.artogue-bg__icon {
+    position: absolute;
+    font-family: 'Material Symbols Outlined';
+    font-size: 2.5rem;
+    opacity: 0.07;
+    color: #630ed4;
+    animation: iconFloat 12s ease-in-out infinite;
+}
+
+.dark .artogue-bg__icon {
+    opacity: 0.1;
+    color: #d2bbff;
+}
+
+.artogue-bg__icon--1 { top: 12%; left: 8%; animation-delay: 0s; }
+.artogue-bg__icon--2 { top: 22%; right: 12%; animation-delay: -2s; font-size: 3rem; }
+.artogue-bg__icon--3 { bottom: 28%; left: 15%; animation-delay: -4s; }
+.artogue-bg__icon--4 { bottom: 18%; right: 20%; animation-delay: -6s; font-size: 2rem; }
+.artogue-bg__icon--5 { top: 55%; right: 8%; animation-delay: -8s; }
+.artogue-bg__icon--6 { top: 70%; left: 45%; animation-delay: -10s; font-size: 3.25rem; }
+
+.artogue-bg__sparkle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #7c3aed;
+    border-radius: 50%;
+    opacity: 0.35;
+    animation: sparkle 4s ease-in-out infinite;
+}
+
+.dark .artogue-bg__sparkle {
+    background: #d2bbff;
+    opacity: 0.5;
+}
+
+.artogue-bg__sparkle--1 { top: 18%; left: 55%; animation-delay: 0s; }
+.artogue-bg__sparkle--2 { top: 35%; left: 72%; animation-delay: 1.2s; width: 4px; height: 4px; }
+.artogue-bg__sparkle--3 { bottom: 40%; left: 30%; animation-delay: 2.4s; }
+.artogue-bg__sparkle--4 { bottom: 55%; right: 35%; animation-delay: 0.8s; width: 5px; height: 5px; }
+
+@keyframes blobDrift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(24px, -16px) scale(1.05); }
+    66% { transform: translate(-16px, 20px) scale(0.95); }
+}
+
+@keyframes iconFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-18px) rotate(8deg); }
+}
+
+@keyframes sparkle {
+    0%, 100% { transform: scale(1); opacity: 0.2; }
+    50% { transform: scale(1.8); opacity: 0.7; }
+}
+
+.page-shell {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+}
+
+/* ——— Pemilih bulan/tanggal ——— */
+.period-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(124, 58, 237, 0.25);
+    background: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    position: relative;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--artogue-text, #141b2b);
+}
+
+.dark .period-select {
+    background: rgba(28, 27, 27, 0.9);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--artogue-text, #f2f4fc);
+}
+
+.period-select:hover {
+    border-color: #7c3aed;
+    box-shadow: 0 4px 14px rgba(99, 14, 212, 0.15);
+    transform: translateY(-1px);
+}
+
+.period-select .material-symbols-outlined {
+    font-size: 20px;
+    color: #7c3aed;
+}
+
+.dark .period-select .material-symbols-outlined {
+    color: #d2bbff;
+}
+
+.period-select__input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    margin: 0;
+}
+
+.period-select__label {
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* Input & select di form — kontras */
+.dark .input-field,
+.dark .modal-field {
+    color: #f2f4fc;
+    background-color: #1a1a1a;
+}
+
+.light .input-field {
+    color: #141b2b;
+}
+
+.dark .akun-pilih {
+    color: #f2f4fc;
+}
+
+.dark .akun-pilih .text-on-surface-variant {
+    color: #b8bcc8 !important;
+}
+
+.dark .modal-sheet,
+.dark .modal-sheet p,
+.dark .modal-sheet label,
+.dark .modal-sheet strong {
+    color: var(--artogue-text, #f2f4fc);
+}
+
+.dark .modal-sheet .text-on-surface-variant {
+    color: var(--artogue-text-muted, #c8cedd) !important;
+}
+
+.dark #hapus-rekening-preview li {
+    color: var(--artogue-text-muted, #c8cedd);
+}
+
+.dark #hapus-rekening-preview li .font-semibold {
+    color: var(--artogue-text, #f2f4fc);
+}
+
+/* ——— Dashboard & Animasi Spesifik ——— */
+.hover-lift {
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 28px rgba(20, 27, 43, 0.1);
+}
+.dark .hover-lift:hover {
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+@keyframes floatOrb {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-12px, 8px) scale(1.08); }
+}
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 8px 32px rgba(99, 14, 212, 0.25); }
+    50% { box-shadow: 0 12px 40px rgba(124, 58, 237, 0.45); }
+}
+.orb-float { animation: floatOrb 7s ease-in-out infinite; }
+.net-worth-glow { animation: pulseGlow 4s ease-in-out infinite; }
+
+.btn-gradient {
+    background: linear-gradient(135deg, #630ed4 0%, #7c3aed 50%, #5a00c6 100%);
+    background-size: 200% 200%;
+    transition: background-position 0.4s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+.btn-gradient:hover {
+    background-position: 100% 0;
+    box-shadow: 0 8px 24px rgba(99, 14, 212, 0.35);
+    transform: translateY(-1px);
+}
+
+.chart-card {
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(20, 27, 43, 0.06), 0 4px 12px rgba(20, 27, 43, 0.04);
+}
+.dark .chart-card {
+    background: #1c1b1b;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-in {
+    animation: fadeInUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.delay-1 { animation-delay: 0.07s; }
+.delay-2 { animation-delay: 0.14s; }
+.delay-3 { animation-delay: 0.21s; }
+.delay-4 { animation-delay: 0.28s; }
