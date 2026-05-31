@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { api } from '../lib/api';
 
 export function AccountList() {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
 
-  const [modalType, setModalType] = useState<'tambah-rekening' | 'tambah-aset' | 'kelola-aset' | null>(null);
+  const [modalType, setModalType] = useState<'tambah-rekening' | 'tambah-aset' | 'kelola-aset' | 'edit-aset' | null>(null);
   const [activeAccountId, setActiveAccountId] = useState<number | null>(null);
+  const [activeAssetId, setActiveAssetId] = useState<number | null>(null);
   
   const [namaRekening, setNamaRekening] = useState('');
   const [jenisAset, setJenisAset] = useState('');
@@ -16,10 +17,18 @@ export function AccountList() {
   
   const [isSaving, setIsSaving] = useState(false);
   const [validationError, setValidationError] = useState(false);
+  const [notification, setNotification] = useState<{message: string, type: 'error' | 'success'} | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'rekening' | 'aset' | 'kategori', id: number, name?: string, parentName?: string, count?: number } | null>(null);
+
+  // Fungsi pemanggil notifikasi bergaya Toast
+  const showNotification = (message: string, type: 'error' | 'success' = 'error') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get('/asset-categories');
+      const response = await api.get('/asset-category');
       setCategories(response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -35,69 +44,119 @@ export function AccountList() {
         console.error('Error fetching accounts:', error);
       }
     };
-    fetchAccounts();
-    fetchCategories();
+
+    const loadData = () => {
+      fetchAccounts();
+      fetchCategories();
+    };
+    
+    loadData();
+
+    window.addEventListener('dashboard-update', loadData);
+    return () => window.removeEventListener('dashboard-update', loadData);
   }, []);
 
+  // Menutup modal dengan tombol 'Escape'
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isSaving) {
+        if (deleteTarget) setDeleteTarget(null);
+        else if (modalType) closeModal();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isSaving, deleteTarget, modalType]);
+
   const handleDeleteRekening = async (id: number) => {
-    if (!window.confirm('Hapus rekening beserta seluruh aset di dalamnya?')) return;
+    setIsSaving(true);
     try {
       await api.delete(`/platform/${id}`);
       setAccounts(accounts.filter(a => a.id !== id));
+      window.dispatchEvent(new Event('dashboard-update'));
+      showNotification('Rekening berhasil dihapus.', 'success');
+      setDeleteTarget(null);
     } catch (error) {
       console.error('Error deleting account:', error);
+      showNotification('Gagal menghapus rekening.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleDeleteAset = async (id: number) => {
-    if (!window.confirm('Hapus aset ini secara permanen?')) return;
+    setIsSaving(true);
     try {
-      await api.delete(`/portfolios/${id}`);
+      await api.delete(`/portfolio/${id}`);
       const response = await api.get('/platform');
       setAccounts(response.data);
+      window.dispatchEvent(new Event('dashboard-update'));
+      showNotification('Aset berhasil dihapus.', 'success');
+      setDeleteTarget(null);
     } catch (error) {
       console.error('Error deleting asset:', error);
+      showNotification('Gagal menghapus aset.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
+    setIsSaving(true);
     try {
-      await api.post('/asset-categories', { name: newCategory });
+      await api.post('/asset-category', { name: newCategory });
       setNewCategory('');
       fetchCategories();
+      showNotification('Kategori aset berhasil ditambahkan.', 'success');
     } catch (error: any) {
       if (error.response?.status === 400) {
-        alert(error.response.data.message || 'Kategori sudah ada.');
+        showNotification(error.response.data.message || 'Kategori sudah ada.');
       } else {
         console.error('Gagal menambahkan kategori aset:', error);
+        showNotification('Gagal menambahkan kategori aset.');
       }
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleDeleteCategory = async (id: number) => {
-    if (!window.confirm('Hapus kategori aset ini? Aset yang menggunakan kategori ini akan kehilangan label jenisnya.')) return;
+    setIsSaving(true);
     try {
-      await api.delete(`/asset-categories/${id}`);
+      await api.delete(`/asset-category/${id}`);
       fetchCategories();
+      showNotification('Kategori aset berhasil dihapus.', 'success');
+      setDeleteTarget(null);
     } catch (error) {
       console.error('Gagal menghapus kategori aset:', error);
+      showNotification('Gagal menghapus kategori aset.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const openModal = (type: 'tambah-rekening' | 'tambah-aset' | 'kelola-aset', accountId?: number) => {
+  const openModal = (type: 'tambah-rekening' | 'tambah-aset' | 'kelola-aset' | 'edit-aset', accountId?: number, asset?: any) => {
     setModalType(type);
     if (accountId) setActiveAccountId(accountId);
     setValidationError(false);
     setNamaRekening('');
-    setJenisAset('');
-    setJumlahAsetRaw('');
     setNewCategory('');
+
+    if (type === 'edit-aset' && asset) {
+      setActiveAssetId(asset.id);
+      setJumlahAsetRaw(asset.balance ? Number(asset.balance).toLocaleString('id-ID') : '');
+    } else {
+      setActiveAssetId(null);
+      setJenisAset('');
+      setJumlahAsetRaw('');
+    }
   };
 
   const closeModal = () => {
     setModalType(null);
     setActiveAccountId(null);
+    setActiveAssetId(null);
   };
 
   const handleJumlahChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,9 +172,11 @@ export function AccountList() {
     try {
       const res = await api.post('/platform', { name: nama });
       setAccounts([...accounts, { ...res.data, portfolios: [] }]);
+      window.dispatchEvent(new Event('dashboard-update'));
+      showNotification('Rekening berhasil ditambahkan.', 'success');
       closeModal();
     } catch (error) {
-      alert('Rekening dengan nama tersebut sudah ada atau terjadi kesalahan.');
+      showNotification('Rekening dengan nama tersebut sudah ada atau terjadi kesalahan.');
     } finally {
       setIsSaving(false);
     }
@@ -127,12 +188,36 @@ export function AccountList() {
 
     setIsSaving(true);
     try {
-      await api.post('/portfolios', { platformId: activeAccountId, assetCategoryId: parseInt(jenisAset), amount });
+      await api.post('/portfolio', { platformId: activeAccountId, assetCategoryId: parseInt(jenisAset), balance: amount });
       const response = await api.get('/platform');
       setAccounts(response.data);
+      window.dispatchEvent(new Event('dashboard-update'));
+      showNotification('Aset berhasil ditambahkan.', 'success');
       closeModal();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving asset:', error);
+      showNotification(error.response?.data?.message || 'Terjadi kesalahan. Gagal menyimpan aset.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleUpdateAset = async () => {
+    const amount = parseInt(jumlahAsetRaw.replace(/\D/g, '') || '0', 10);
+    if (amount <= 0) return setValidationError(true);
+    if (!activeAssetId) return;
+
+    setIsSaving(true);
+    try {
+      await api.patch(`/portfolio/${activeAssetId}/balance`, { balance: amount });
+      const response = await api.get('/platform');
+      setAccounts(response.data);
+      window.dispatchEvent(new Event('dashboard-update'));
+      showNotification('Perubahan berhasil disimpan.', 'success');
+      closeModal();
+    } catch (error: any) {
+      console.error('Error updating asset:', error);
+      showNotification(error.response?.data?.message || 'Gagal menyimpan perubahan. Pastikan backend Anda berjalan dengan baik.');
     } finally {
       setIsSaving(false);
     }
@@ -159,7 +244,7 @@ export function AccountList() {
 
       <div id="rekening-list" className="space-y-6">
         {accounts.map((rek) => {
-          const totalAset = rek.portfolios?.reduce((sum: number, p: any) => sum + Number(p.amount), 0) || 0;
+          const totalAset = rek.portfolios?.reduce((sum: number, p: any) => sum + Number(p.balance), 0) || 0;
           return (
           <article key={rek.id} className="account-card hover-lift rounded-2xl border border-outline-variant/40 dark:border-white/10 p-6 space-y-6 transition-colors bg-white dark:bg-[#1c1b1b] hover:border-primary/30 dark:hover:border-primary-fixed-dim/30">
             <div className="flex items-start justify-between gap-4">
@@ -178,7 +263,7 @@ export function AccountList() {
                 <button type="button" onClick={() => openModal('tambah-aset', rek.id)} className="w-10 h-10 rounded-xl flex items-center justify-center bg-surface-container dark:bg-primary/20 text-primary dark:text-primary-fixed-dim hover:opacity-80 transition-transform hover:scale-105 active:scale-95" title="Tambah aset">
                   <span className="material-symbols-outlined text-[22px] font-bold">add</span>
                 </button>
-                <button type="button" onClick={() => handleDeleteRekening(rek.id)} className="w-10 h-10 rounded-xl flex items-center justify-center bg-error-container/50 text-error dark:bg-error/15 dark:text-red-400 hover:opacity-80 transition-transform hover:scale-105 active:scale-95" title="Hapus rekening">
+                <button type="button" onClick={() => setDeleteTarget({ type: 'rekening', id: rek.id, name: rek.name, count: rek.portfolios?.length || 0 })} className="w-10 h-10 rounded-xl flex items-center justify-center bg-error-container/50 text-error dark:bg-error/15 dark:text-red-400 hover:opacity-80 transition-transform hover:scale-105 active:scale-95" title="Hapus rekening">
                   <span className="material-symbols-outlined text-[22px]">delete</span>
                 </button>
               </div>
@@ -188,16 +273,16 @@ export function AccountList() {
               {rek.portfolios?.map((aset: any) => (
                 <div key={aset.id} className="asset-chip rounded-xl p-4 relative shrink-0">
                   <div className="absolute top-2 right-2 flex gap-1">
-                    <button type="button" className="p-0.5 text-primary hover:opacity-70 transition-transform hover:scale-110 active:scale-95" title="Edit aset">
+                    <button type="button" onClick={() => openModal('edit-aset', rek.id, aset)} className="p-0.5 text-primary hover:opacity-70 transition-transform hover:scale-110 active:scale-95" title="Edit aset">
                       <span className="material-symbols-outlined text-[18px]">edit</span>
                     </button>
-                    <button type="button" onClick={() => handleDeleteAset(aset.id)} className="p-0.5 text-error hover:opacity-70 transition-transform hover:scale-110 active:scale-95" title="Hapus aset">
+                    <button type="button" onClick={() => setDeleteTarget({ type: 'aset', id: aset.id, name: aset.assetCategory?.name || 'Aset', parentName: rek.name })} className="p-0.5 text-error hover:opacity-70 transition-transform hover:scale-110 active:scale-95" title="Hapus aset">
                       <span className="material-symbols-outlined text-[18px]">delete</span>
                     </button>
                   </div>
                   <span className="material-symbols-outlined text-primary/60 text-[20px] mb-2 block">hub</span>
                   <p className="font-label-md text-label-md text-on-surface dark:text-white pr-12 truncate">{aset.assetCategory?.name || 'Aset'}</p>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#c8cedd] mt-1">Rp {Number(aset.amount).toLocaleString('id-ID')}</p>
+                  <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-[#c8cedd] mt-1">Rp {Number(aset.balance).toLocaleString('id-ID')}</p>
                 </div>
               ))}
             </div>
@@ -206,8 +291,8 @@ export function AccountList() {
       </div>
 
       {/* Modal Overlay */}
-      {modalType && (
-        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-6 opacity-100 visible">
+      {modalType && createPortal(
+        <div className="fixed inset-0 z-[999] flex items-end md:items-center justify-center p-0 md:p-6 opacity-100 visible">
           <div className="absolute inset-0 bg-[#141b2b]/40 dark:bg-black/60 backdrop-blur-sm transition-opacity" onClick={closeModal}></div>
           <div className="relative z-10 w-full max-w-[440px] max-h-[90vh] overflow-y-auto bg-white dark:bg-[#1c1b1b] rounded-t-[24px] md:rounded-2xl p-6 shadow-2xl animate-in fade-in slide-in-from-bottom-8 md:slide-in-from-bottom-4">
              <div className="w-10 h-1 bg-outline-variant/50 dark:bg-white/20 rounded-full mx-auto mb-6 md:hidden"></div>
@@ -215,14 +300,14 @@ export function AccountList() {
              {modalType === 'tambah-rekening' && (
                <div>
                  <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary dark:text-primary-fixed-dim flex items-center justify-center mx-auto mb-4">
-                    <span className="material-symbols-outlined text-[32px]" style={{ fontVariationSettings: "'FILL' 1" }}>account_balance_wallet</span>
+                    <span className="material-symbols-outlined text-[28px]">account_balance_wallet</span>
                  </div>
                  <h3 className="font-headline-md text-headline-md text-on-surface dark:text-white text-center">Tambah Rekening</h3>
                  <p className="font-body-sm text-body-sm text-on-surface-variant text-center mt-1 mb-6">Buat dompet digital atau platform baru.</p>
                  <div className="space-y-4">
                     <div>
                       <label className="font-label-md text-label-md text-on-surface-variant block mb-1.5">Nama Rekening</label>
-                      <input type="text" value={namaRekening} onChange={e => setNamaRekening(e.target.value)} className={`w-full h-12 px-4 rounded-xl border bg-surface dark:bg-[#131313] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 ${validationError && !namaRekening ? 'border-error ring-1 ring-error' : 'border-outline-variant dark:border-white/10'}`} placeholder="Contoh: BCA, Bibit..." />
+                      <input type="text" value={namaRekening} onChange={e => setNamaRekening(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSimpanRekening()} className={`w-full h-12 px-4 rounded-xl border bg-surface dark:bg-[#131313] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 ${validationError && !namaRekening ? 'border-error ring-1 ring-error' : 'border-outline-variant dark:border-white/10'}`} placeholder="Contoh: BCA, Bibit..." />
                     </div>
                     <div className="flex gap-3 pt-4">
                        <button type="button" onClick={closeModal} className="flex-1 h-11 rounded-xl border border-outline-variant dark:border-white/15 font-label-md text-on-surface-variant hover:bg-surface-variant dark:hover:bg-white/5 transition-colors">Batal</button>
@@ -237,7 +322,7 @@ export function AccountList() {
              {modalType === 'tambah-aset' && (
                <div>
                  <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary dark:text-primary-fixed-dim flex items-center justify-center mx-auto mb-4">
-                    <span className="material-symbols-outlined text-[32px]" style={{ fontVariationSettings: "'FILL' 1" }}>savings</span>
+                    <span className="material-symbols-outlined text-[28px]">savings</span>
                  </div>
                  <h3 className="font-headline-md text-headline-md text-on-surface dark:text-white text-center">Tambah Aset</h3>
                  <p className="font-body-sm text-body-sm text-on-surface-variant text-center mt-1 mb-6">ke rekening <strong className="text-primary dark:text-primary-fixed-dim">{accounts.find(a => a.id === activeAccountId)?.name}</strong></p>
@@ -253,7 +338,7 @@ export function AccountList() {
                       <label className="font-label-md text-label-md text-on-surface-variant block mb-1.5">Jumlah (IDR)</label>
                       <div className="relative">
                          <span className="absolute left-4 top-1/2 -translate-y-1/2 font-semibold text-primary">Rp</span>
-                         <input type="text" inputMode="numeric" value={jumlahAsetRaw} onChange={handleJumlahChange} className={`w-full h-12 pl-12 pr-4 rounded-xl border bg-surface dark:bg-[#131313] dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 ${validationError && !jumlahAsetRaw ? 'border-error ring-1 ring-error' : 'border-outline-variant dark:border-white/10'}`} placeholder="0" />
+                         <input type="text" inputMode="numeric" value={jumlahAsetRaw} onChange={handleJumlahChange} onKeyDown={e => e.key === 'Enter' && handleSimpanAset()} className={`w-full h-12 pl-12 pr-4 rounded-xl border bg-surface dark:bg-[#131313] dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 ${validationError && !jumlahAsetRaw ? 'border-error ring-1 ring-error' : 'border-outline-variant dark:border-white/10'}`} placeholder="0" />
                       </div>
                     </div>
                     <div className="flex gap-3 pt-4">
@@ -266,19 +351,44 @@ export function AccountList() {
                </div>
              )}
 
+             {modalType === 'edit-aset' && (
+               <div>
+                 <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary dark:text-primary-fixed-dim flex items-center justify-center mx-auto mb-4">
+                    <span className="material-symbols-outlined text-[28px]">edit</span>
+                 </div>
+                 <h3 className="font-headline-md text-headline-md text-on-surface dark:text-white text-center">Edit Aset</h3>
+                 <p className="font-body-sm text-body-sm text-on-surface-variant text-center mt-1 mb-6">di rekening <strong className="text-primary dark:text-primary-fixed-dim">{accounts.find(a => a.id === activeAccountId)?.name}</strong></p>
+                 <div className="space-y-4">
+                    <div>
+                      <label className="font-label-md text-label-md text-on-surface-variant block mb-1.5">Jumlah (IDR)</label>
+                      <div className="relative">
+                         <span className="absolute left-4 top-1/2 -translate-y-1/2 font-semibold text-primary">Rp</span>
+                         <input type="text" inputMode="numeric" value={jumlahAsetRaw} onChange={handleJumlahChange} onKeyDown={e => e.key === 'Enter' && handleUpdateAset()} className={`w-full h-12 pl-12 pr-4 rounded-xl border bg-surface dark:bg-[#131313] dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 ${validationError && !jumlahAsetRaw ? 'border-error ring-1 ring-error' : 'border-outline-variant dark:border-white/10'}`} placeholder="0" />
+                      </div>
+                    </div>
+                    <div className="flex gap-3 pt-4">
+                       <button type="button" onClick={closeModal} className="flex-1 h-11 rounded-xl border border-outline-variant dark:border-white/15 font-label-md text-on-surface-variant hover:bg-surface-variant dark:hover:bg-white/5 transition-colors">Batal</button>
+                       <button type="button" onClick={handleUpdateAset} disabled={isSaving} className="flex-1 h-11 rounded-xl bg-primary text-white font-label-md hover:brightness-110 transition-all flex items-center justify-center gap-2 disabled:opacity-70">
+                          {isSaving ? <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span> : 'Simpan Perubahan'}
+                       </button>
+                    </div>
+                 </div>
+               </div>
+             )}
+
              {modalType === 'kelola-aset' && (
                <div>
                  <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary dark:text-primary-fixed-dim flex items-center justify-center mx-auto mb-4">
-                    <span className="material-symbols-outlined text-[32px]" style={{ fontVariationSettings: "'FILL' 1" }}>settings</span>
+                    <span className="material-symbols-outlined text-[28px]">settings</span>
                  </div>
                  <h3 className="font-headline-md text-headline-md text-on-surface dark:text-white text-center">Kelola Jenis Aset</h3>
                  <p className="font-body-sm text-body-sm text-on-surface-variant text-center mt-1 mb-6">Atur kategori jenis aset portofolio Anda.</p>
                  
                  <div className="space-y-4">
                     <div className="flex gap-2">
-                      <input type="text" value={newCategory} onChange={e => setNewCategory(e.target.value)} className="w-full h-11 px-4 rounded-xl border bg-surface dark:bg-[#131313] dark:text-white border-outline-variant dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="Kategori baru..." />
-                      <button type="button" onClick={handleAddCategory} className="h-11 w-11 rounded-xl bg-primary text-white hover:brightness-110 transition-all flex items-center justify-center shrink-0">
-                         <span className="material-symbols-outlined text-[20px]">add</span>
+                      <input type="text" value={newCategory} onChange={e => setNewCategory(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddCategory()} disabled={isSaving} className="w-full h-11 px-4 rounded-xl border bg-surface dark:bg-[#131313] dark:text-white border-outline-variant dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-70" placeholder="Kategori baru..." />
+                      <button type="button" onClick={handleAddCategory} disabled={isSaving} className="h-11 w-11 rounded-xl bg-primary text-white hover:brightness-110 transition-all flex items-center justify-center shrink-0 disabled:opacity-70">
+                         {isSaving ? <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span> : <span className="material-symbols-outlined text-[20px]">add</span>}
                       </button>
                     </div>
 
@@ -289,7 +399,7 @@ export function AccountList() {
                             <div className="w-3 h-3 rounded-full bg-primary"></div>
                             <span className="font-body-sm font-medium text-on-surface dark:text-white">{aset.name}</span>
                           </div>
-                          <button type="button" onClick={() => handleDeleteCategory(aset.id)} className="p-1.5 text-on-surface-variant hover:text-error transition-colors rounded-lg hover:bg-error/10" title="Hapus">
+                          <button type="button" onClick={() => setDeleteTarget({ type: 'kategori', id: aset.id, name: aset.name })} className="p-1.5 text-on-surface-variant hover:text-error transition-colors rounded-lg hover:bg-error/10" title="Hapus">
                             <span className="material-symbols-outlined text-[18px]">delete</span>
                           </button>
                         </div>
@@ -303,7 +413,79 @@ export function AccountList() {
                </div>
              )}
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Modal Konfirmasi Hapus */}
+      {deleteTarget && createPortal(
+        <div className="fixed inset-0 z-[1000] flex items-end md:items-center justify-center p-0 md:p-6 opacity-100 visible">
+          <div className={`absolute inset-0 transition-opacity ${modalType ? 'bg-black/20 dark:bg-black/40' : 'bg-[#141b2b]/40 dark:bg-black/60 backdrop-blur-sm'}`} onClick={() => !isSaving && setDeleteTarget(null)}></div>
+          <div className="relative z-10 w-full max-w-[400px] bg-white dark:bg-[#1c1b1b] rounded-t-[24px] md:rounded-2xl p-6 shadow-2xl animate-in fade-in slide-in-from-bottom-8 md:slide-in-from-bottom-4">
+            <div className="w-10 h-1 bg-outline-variant/50 dark:bg-white/20 rounded-full mx-auto mb-6 md:hidden"></div>
+            <div className="w-14 h-14 rounded-2xl bg-error/10 text-error dark:text-red-400 flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-[28px]">
+                {deleteTarget.type === 'rekening' ? 'warning' : 'delete_forever'}
+              </span>
+            </div>
+            <h3 className="font-headline-md text-headline-md text-on-surface dark:text-white text-center">
+              {deleteTarget.type === 'rekening' ? 'Hapus Rekening?' : deleteTarget.type === 'aset' ? 'Hapus Aset?' : 'Hapus Kategori?'}
+            </h3>
+            
+            <div className="text-center mt-2 mb-6">
+              {deleteTarget.type === 'rekening' && (
+                <p className="font-body-sm text-on-surface-variant">
+                  Rekening <strong className="text-on-surface dark:text-white">{deleteTarget.name}</strong> beserta <span className="font-semibold">{deleteTarget.count ? `${deleteTarget.count} aset` : 'semua aset'}</span> di dalamnya akan dihapus permanen.
+                </p>
+              )}
+              {deleteTarget.type === 'aset' && (
+                <>
+                  <p className="font-body-sm text-on-surface-variant">
+                    <strong className="text-on-surface dark:text-white block text-base mb-1">{deleteTarget.name}</strong>
+                    dari rekening <span className="font-semibold">{deleteTarget.parentName}</span>. Tindakan ini tidak dapat dibatalkan.
+                  </p>
+                  <div className="mt-4 rounded-xl bg-error-container/50 dark:bg-error/10 p-3 flex gap-2 text-left">
+                    <span className="material-symbols-outlined text-error text-[20px] shrink-0">warning</span>
+                    <p className="font-label-sm text-sm text-on-error-container dark:text-red-300">Nilai aset akan dihapus dari portofolio dan grafik distribusi.</p>
+                  </div>
+                </>
+              )}
+              {deleteTarget.type === 'kategori' && (
+                <p className="font-body-sm text-on-surface-variant">
+                  Kategori <strong className="text-on-surface dark:text-white">{deleteTarget.name}</strong> akan dihapus. Aset yang menggunakan kategori ini akan kehilangan label jenisnya.
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setDeleteTarget(null)} disabled={isSaving} className="flex-1 h-11 rounded-xl border border-outline-variant dark:border-white/15 font-label-md text-on-surface-variant hover:bg-surface-variant dark:hover:bg-white/5 transition-colors disabled:opacity-70">Batal</button>
+              <button type="button" onClick={() => { if (deleteTarget.type === 'rekening') handleDeleteRekening(deleteTarget.id); else if (deleteTarget.type === 'aset') handleDeleteAset(deleteTarget.id); else if (deleteTarget.type === 'kategori') handleDeleteCategory(deleteTarget.id); }} disabled={isSaving} className="flex-1 h-11 rounded-xl bg-error text-white font-label-md hover:brightness-110 transition-all flex items-center justify-center gap-2 disabled:opacity-70">
+                {isSaving ? <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span> : 'Ya, Hapus'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Toast Notification Custom */}
+      {notification && createPortal(
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[9999] animate-in fade-in slide-in-from-top-8 duration-300">
+          <div className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border ${
+            notification.type === 'error' 
+              ? 'bg-error-container text-on-error-container border-error/20 dark:bg-error/20 dark:text-red-300 dark:border-red-500/30' 
+              : 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30'
+          }`}>
+            <span className="material-symbols-outlined text-[22px]">
+              {notification.type === 'error' ? 'warning' : 'check_circle'}
+            </span>
+            <p className="font-label-md text-sm">{notification.message}</p>
+            <button onClick={() => setNotification(null)} className="ml-4 hover:opacity-70 flex items-center justify-center">
+              <span className="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </div>
+        </div>,
+        document.body
       )}
     </section>
   );

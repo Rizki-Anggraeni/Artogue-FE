@@ -1,4 +1,28 @@
+import { useState, useEffect } from 'react';
+import { api } from '../lib/api';
+
 export function PortfolioSummary() {
+  const [summary, setSummary] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const res = await api.get('/dashboard');
+        setSummary(res.data);
+      } catch (error) {
+        console.error('Error fetching dashboard summary:', error);
+      }
+    };
+    fetchDashboard();
+
+    window.addEventListener('dashboard-update', fetchDashboard);
+    return () => window.removeEventListener('dashboard-update', fetchDashboard);
+  }, []);
+
+  const totalNetWorth = summary?.totalNetWorth || 0;
+  const totalRekening = summary?.summaryByPlatform?.length || 0;
+  const totalAset = summary?.summaryByCategory?.length || 0;
+
   return (
     <div className="rounded-2xl p-6 md:p-8 animate-in bg-gradient-to-br from-primary/5 via-primary/5 to-transparent border border-primary/10 dark:from-primary/15 dark:via-primary/5 dark:border-white/5">
       <div className="flex flex-wrap items-end justify-between gap-6 mb-6">
@@ -19,15 +43,15 @@ export function PortfolioSummary() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white/70 dark:bg-[#1c1b1b]/90 border border-outline-variant/50 dark:border-white/10 rounded-xl px-4 py-3 transition-transform hover:-translate-y-0.5 hover:shadow-md">
           <p className="font-label-sm text-label-sm text-on-surface-variant dark:text-on-surface-variant">Net Worth</p>
-          <p className="font-headline-md text-headline-md text-on-surface dark:text-white font-bold mt-0.5">—</p>
+          <p className="font-headline-md text-headline-md text-on-surface dark:text-white font-bold mt-0.5">Rp {Number(totalNetWorth).toLocaleString('id-ID')}</p>
         </div>
         <div className="bg-white/70 dark:bg-[#1c1b1b]/90 border border-outline-variant/50 dark:border-white/10 rounded-xl px-4 py-3 transition-transform hover:-translate-y-0.5 hover:shadow-md">
           <p className="font-label-sm text-label-sm text-on-surface-variant dark:text-on-surface-variant">Rekening</p>
-          <p className="font-headline-md text-headline-md text-on-surface dark:text-white font-bold mt-0.5">—</p>
+          <p className="font-headline-md text-headline-md text-on-surface dark:text-white font-bold mt-0.5">{totalRekening}</p>
         </div>
         <div className="bg-white/70 dark:bg-[#1c1b1b]/90 border border-outline-variant/50 dark:border-white/10 rounded-xl px-4 py-3 transition-transform hover:-translate-y-0.5 hover:shadow-md">
           <p className="font-label-sm text-label-sm text-on-surface-variant dark:text-on-surface-variant">Jenis Aset</p>
-          <p className="font-headline-md text-headline-md text-on-surface dark:text-white font-bold mt-0.5">—</p>
+          <p className="font-headline-md text-headline-md text-on-surface dark:text-white font-bold mt-0.5">{totalAset}</p>
         </div>
         <div className="bg-white/70 dark:bg-[#1c1b1b]/90 border border-emerald-200/60 dark:border-emerald-500/20 rounded-xl px-4 py-3 transition-transform hover:-translate-y-0.5 hover:shadow-md">
           <p className="font-label-sm text-label-sm text-emerald-700 dark:text-emerald-400">Pertumbuhan</p>

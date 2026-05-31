@@ -1,4 +1,33 @@
+import { useState, useEffect } from 'react';
+import { api } from '../lib/api';
+
 export function NetWorthOverview() {
+  const [summary, setSummary] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const res = await api.get('/dashboard');
+        setSummary(res.data);
+      } catch (error) {
+        console.error('Error fetching dashboard summary:', error);
+      }
+    };
+    fetchDashboard();
+
+    window.addEventListener('dashboard-update', fetchDashboard);
+    return () => window.removeEventListener('dashboard-update', fetchDashboard);
+  }, []);
+
+  const totalNetWorth = summary?.totalNetWorth || 0;
+  const totalRekening = summary?.summaryByPlatform?.length || 0;
+  
+  const perbankanTotal = summary?.summaryByCategory?.find((c: any) => c.name.toLowerCase().includes('bank') || c.name.toLowerCase().includes('tabungan'))?.total || 0;
+  const perbankanPct = totalNetWorth ? (Number(perbankanTotal) / Number(totalNetWorth)) * 100 : 0;
+
+  const investasiTotal = summary?.summaryByCategory?.filter((c: any) => !c.name.toLowerCase().includes('bank') && !c.name.toLowerCase().includes('tabungan')).reduce((sum: number, c: any) => sum + Number(c.total), 0) || 0;
+  const investasiPct = totalNetWorth ? (Number(investasiTotal) / Number(totalNetWorth)) * 100 : 0;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {/* Total Net Worth Card */}
@@ -9,13 +38,13 @@ export function NetWorthOverview() {
           <div className="flex justify-between items-start gap-4">
             <div>
               <p className="font-label-md text-label-md uppercase tracking-wider opacity-80 mb-1">Total Net Worth</p>
-              <h3 className="font-headline-lg text-headline-lg tracking-tight">Rp 0</h3>
+              <h3 className="font-headline-lg text-headline-lg tracking-tight">Rp {Number(totalNetWorth).toLocaleString('id-ID')}</h3>
             </div>
             <span className="material-symbols-outlined text-white/30 text-[48px]">account_balance_wallet</span>
           </div>
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <span className="flex items-center gap-1 px-4 py-1.5 bg-white/20 rounded-full font-label-md text-label-md backdrop-blur-sm">—</span>
-            <p className="text-sm opacity-80">—</p>
+            <p className="text-sm opacity-80">dibanding bulan lalu</p>
           </div>
         </div>
       </div>
@@ -28,14 +57,14 @@ export function NetWorthOverview() {
           </div>
           <div>
             <p className="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant">Total Rekening</p>
-            <h3 className="font-headline-md text-headline-md dark:text-white">0</h3>
+            <h3 className="font-headline-md text-headline-md dark:text-white">{totalRekening}</h3>
           </div>
         </div>
         <div className="space-y-4">
-          <div className="flex justify-between items-center text-body-sm"><span className="text-on-surface-variant dark:text-on-surface-variant">Perbankan</span><span className="font-bold text-on-surface dark:text-white">0</span></div>
-          <div className="w-full bg-surface-container dark:bg-white/5 rounded-full h-2 overflow-hidden"><div className="bg-primary dark:bg-primary-fixed-dim h-2 rounded-full transition-all duration-700" style={{ width: '0%' }}></div></div>
-          <div className="flex justify-between items-center text-body-sm"><span className="text-on-surface-variant dark:text-on-surface-variant">Investasi</span><span className="font-bold text-on-surface dark:text-white">0</span></div>
-          <div className="w-full bg-surface-container dark:bg-white/5 rounded-full h-2 overflow-hidden"><div className="bg-tertiary-container dark:bg-tertiary-fixed-dim h-2 rounded-full transition-all duration-700" style={{ width: '0%' }}></div></div>
+          {/* <div className="flex justify-between items-center text-body-sm"><span className="text-on-surface-variant dark:text-on-surface-variant">Perbankan</span><span className="font-bold text-on-surface dark:text-white">Rp {Number(perbankanTotal).toLocaleString('id-ID')}</span></div>
+          <div className="w-full bg-surface-container dark:bg-white/5 rounded-full h-2 overflow-hidden"><div className="bg-primary dark:bg-primary-fixed-dim h-2 rounded-full transition-all duration-700" style={{ width: `${perbankanPct}%` }}></div></div>
+          <div className="flex justify-between items-center text-body-sm"><span className="text-on-surface-variant dark:text-on-surface-variant">Investasi</span><span className="font-bold text-on-surface dark:text-white">Rp {Number(investasiTotal).toLocaleString('id-ID')}</span></div>
+          <div className="w-full bg-surface-container dark:bg-white/5 rounded-full h-2 overflow-hidden"><div className="bg-tertiary-container dark:bg-tertiary-fixed-dim h-2 rounded-full transition-all duration-700" style={{ width: `${investasiPct}%` }}></div></div> */}
         </div>
       </div>
     </div>
