@@ -22,11 +22,6 @@ export function NetWorthOverview() {
   const totalNetWorth = summary?.totalNetWorth || 0;
   const totalRekening = summary?.summaryByPlatform?.length || 0;
   
-  const perbankanTotal = summary?.summaryByCategory?.find((c: any) => c.name.toLowerCase().includes('bank') || c.name.toLowerCase().includes('tabungan'))?.total || 0;
-  const perbankanPct = totalNetWorth ? (Number(perbankanTotal) / Number(totalNetWorth)) * 100 : 0;
-
-  const investasiTotal = summary?.summaryByCategory?.filter((c: any) => !c.name.toLowerCase().includes('bank') && !c.name.toLowerCase().includes('tabungan')).reduce((sum: number, c: any) => sum + Number(c.total), 0) || 0;
-  const investasiPct = totalNetWorth ? (Number(investasiTotal) / Number(totalNetWorth)) * 100 : 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
