@@ -424,12 +424,12 @@ export function AccountList() {
                   <h3 className="text-center font-headline-md text-headline-md text-on-surface dark:text-white">
                     Tambah Rekening
                   </h3>
-                  <p className="mt-1 mb-6 text-center font-body-sm text-body-sm text-on-surface-variant">
+                  <p className="mt-1 mb-6 text-center font-body-sm text-body-sm text-on-surface-variant dark:text-white">
                     Buat dompet digital atau platform baru.
                   </p>
                   <div className="space-y-4">
                     <div>
-                      <label className="font-label-md text-label-md text-on-surface-variant block mb-1.5">
+                      <label className="font-label-md text-label-md text-on-surface-variant block mb-1.5 dark:text-white">
                         Nama Rekening
                       </label>
                       <input
@@ -451,7 +451,7 @@ export function AccountList() {
                       <button
                         type="button"
                         onClick={closeModal}
-                        className="flex-1 transition-colors border h-11 rounded-xl border-outline-variant dark:border-white/15 font-label-md text-on-surface-variant hover:bg-surface-variant dark:hover:bg-white/5"
+                        className="flex-1 transition-colors border h-11 rounded-xl border-outline-variant dark:border-white/15 font-label-md text-on-surface-variant hover:bg-surface-variant dark:hover:bg-white/5 dark:text-white"
                       >
                         Batal
                       </button>
@@ -484,7 +484,7 @@ export function AccountList() {
                   <h3 className="text-center font-headline-md text-headline-md text-on-surface dark:text-white">
                     Tambah Aset
                   </h3>
-                  <p className="mt-1 mb-6 text-center font-body-sm text-body-sm text-on-surface-variant">
+                  <p className="mt-1 mb-6 text-center font-body-sm text-body-sm text-on-surface-variant dark:text-white">
                     ke rekening{" "}
                     <strong className="text-primary dark:text-primary-fixed-dim">
                       {accounts.find((a) => a.id === activeAccountId)?.name}
@@ -492,7 +492,7 @@ export function AccountList() {
                   </p>
                   <div className="space-y-4">
                     <div>
-                      <label className="font-label-md text-label-md text-on-surface-variant block mb-1.5">
+                      <label className="font-label-md text-label-md text-on-surface-variant block mb-1.5 dark:text-white">
                         Jenis Aset
                       </label>
                       <select
@@ -515,7 +515,7 @@ export function AccountList() {
                       </select>
                     </div>
                     <div>
-                      <label className="font-label-md text-label-md text-on-surface-variant block mb-1.5">
+                      <label className="font-label-md text-label-md text-on-surface-variant block mb-1.5 dark:text-white">
                         Jumlah (IDR)
                       </label>
                       <div className="relative">
@@ -543,7 +543,7 @@ export function AccountList() {
                       <button
                         type="button"
                         onClick={closeModal}
-                        className="flex-1 transition-colors border h-11 rounded-xl border-outline-variant dark:border-white/15 font-label-md text-on-surface-variant hover:bg-surface-variant dark:hover:bg-white/5"
+                        className="flex-1 transition-colors border h-11 rounded-xl border-outline-variant dark:border-white/15 font-label-md text-on-surface-variant hover:bg-surface-variant dark:hover:bg-white/5 dark:text-white"
                       >
                         Batal
                       </button>
@@ -576,7 +576,7 @@ export function AccountList() {
                   <h3 className="text-center font-headline-md text-headline-md text-on-surface dark:text-white">
                     Edit Aset
                   </h3>
-                  <p className="mt-1 mb-6 text-center font-body-sm text-body-sm text-on-surface-variant">
+                  <p className="mt-1 mb-6 text-center font-body-sm text-body-sm text-on-surface-variant dark:text-white">
                     di rekening{" "}
                     <strong className="text-primary dark:text-primary-fixed-dim">
                       {accounts.find((a) => a.id === activeAccountId)?.name}
@@ -584,7 +584,7 @@ export function AccountList() {
                   </p>
                   <div className="space-y-4">
                     <div>
-                      <label className="font-label-md text-label-md text-on-surface-variant block mb-1.5">
+                      <label className="font-label-md text-label-md text-on-surface-variant block mb-1.5 dark:text-white">
                         Jumlah (IDR)
                       </label>
                       <div className="relative">
@@ -612,7 +612,7 @@ export function AccountList() {
                       <button
                         type="button"
                         onClick={closeModal}
-                        className="flex-1 transition-colors border h-11 rounded-xl border-outline-variant dark:border-white/15 font-label-md text-on-surface-variant hover:bg-surface-variant dark:hover:bg-white/5"
+                        className="flex-1 transition-colors border h-11 rounded-xl border-outline-variant dark:border-white/15 font-label-md text-on-surface-variant hover:bg-surface-variant dark:hover:bg-white/5 dark:text-white"
                       >
                         Batal
                       </button>
@@ -645,7 +645,7 @@ export function AccountList() {
                   <h3 className="text-center font-headline-md text-headline-md text-on-surface dark:text-white">
                     Kelola Jenis Aset
                   </h3>
-                  <p className="mt-1 mb-6 text-center font-body-sm text-body-sm text-on-surface-variant">
+                  <p className="mt-1 mb-6 text-center font-body-sm text-body-sm text-on-surface-variant dark:text-white">
                     Atur kategori jenis aset portofolio Anda.
                   </p>
 
@@ -716,7 +716,7 @@ export function AccountList() {
                       <button
                         type="button"
                         onClick={closeModal}
-                        className="w-full transition-colors border h-11 rounded-xl border-outline-variant dark:border-white/15 font-label-md text-on-surface-variant hover:bg-surface-variant dark:hover:bg-white/5"
+                        className="w-full transition-colors border h-11 rounded-xl border-outline-variant dark:border-white/15 font-label-md text-on-surface-variant hover:bg-surface-variant dark:hover:bg-white/5 dark:text-white"
                       >
                         Tutup
                       </button>
@@ -760,7 +760,7 @@ export function AccountList() {
 
               <div className="mt-2 mb-6 text-center">
                 {deleteTarget.type === "rekening" && (
-                  <p className="font-body-sm text-on-surface-variant">
+                  <p className="font-body-sm text-on-surface-variant dark:text-white">
                     Rekening{" "}
                     <strong className="text-on-surface dark:text-white">
                       {deleteTarget.name}
@@ -814,7 +814,7 @@ export function AccountList() {
                   type="button"
                   onClick={() => setDeleteTarget(null)}
                   disabled={isSaving}
-                  className="flex-1 transition-colors border h-11 rounded-xl border-outline-variant dark:border-white/15 font-label-md text-on-surface-variant hover:bg-surface-variant dark:hover:bg-white/5 disabled:opacity-70"
+                  className="flex-1 transition-colors border h-11 rounded-xl border-outline-variant dark:border-white/15 font-label-md text-on-surface-variant hover:bg-surface-variant dark:hover:bg-white/5 disabled:opacity-70 dark:text-white"
                 >
                   Batal
                 </button>
